@@ -2,6 +2,51 @@
   <div class="min-h-screen bg-gray-50 dark:bg-nuxt-dark text-gray-900 dark:text-white font-sans antialiased transition-colors duration-300">
     <InterviewNav @go-home="goHome" @toggle-drawer="toggleDrawer" />
     
+    <!-- Loading Overlay -->
+    <div v-if="loading" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/90 dark:bg-nuxt-dark/95 backdrop-blur-sm transition-opacity duration-500">
+      <div class="text-center px-6">
+        <!-- Spinner -->
+        <div class="relative w-16 h-16 mx-auto mb-6">
+          <div class="absolute inset-0 border-4 border-gray-200 dark:border-white/10 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-transparent border-t-nuxt-green rounded-full animate-spin"></div>
+          <div class="absolute inset-2 border-4 border-transparent border-b-nuxt-green/50 rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">正在加载题库数据</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">优先从远程加载最新数据，请稍候...</p>
+        <div class="flex items-center justify-center gap-1.5">
+          <span class="w-1.5 h-1.5 bg-nuxt-green rounded-full animate-bounce" style="animation-delay: 0s;"></span>
+          <span class="w-1.5 h-1.5 bg-nuxt-green rounded-full animate-bounce" style="animation-delay: 0.15s;"></span>
+          <span class="w-1.5 h-1.5 bg-nuxt-green rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Source Toast -->
+    <Transition name="fade">
+      <div v-if="dataSourceToast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[90] px-4 py-2.5 rounded-xl shadow-lg border backdrop-blur-sm transition-all duration-300"
+        :class="dataSourceInfo.remoteCount > 0
+          ? 'bg-nuxt-green/10 border-nuxt-green/20 text-nuxt-green'
+          : 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400'">
+        <div class="flex items-center gap-2 text-sm font-medium">
+          <svg v-if="dataSourceInfo.remoteCount > 0" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+          </svg>
+          <span v-if="dataSourceInfo.remoteCount === dataSourceInfo.totalCategories">
+            ✅ 全部从远程加载，共 {{ questions.length }} 题
+          </span>
+          <span v-else-if="dataSourceInfo.remoteCount > 0">
+            ☁️ 远程 {{ dataSourceInfo.remoteCount }}/{{ dataSourceInfo.totalCategories }} 个分类 · 本地兜底 {{ dataSourceInfo.localCount }} 个分类 · 共 {{ questions.length }} 题
+          </span>
+          <span v-else>
+            📦 远程不可用，使用本地数据，共 {{ questions.length }} 题
+          </span>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Main Content -->
     <div class="pt-14 sm:pt-16">
       <!-- Hero Banner -->
@@ -263,14 +308,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import InterviewNav from './components/InterviewNav.vue'
 import QuestionList from './components/QuestionList.vue'
 import QuestionPanel from './components/QuestionPanel.vue'
 import AnswerPanel from './components/AnswerPanel.vue'
 import ProgressBar from './components/ProgressBar.vue'
 import QuestionManager from './components/QuestionManager.vue'
-import { allQuestions } from './data'
+import { allQuestions, loadQuestions } from './data'
 import type { Question } from './data'
 
 export type { Question }
@@ -292,13 +337,16 @@ const filteredQuestions = isFullVersion
 const started = ref(false)
 const drawerOpen = ref(false)
 const managerVisible = ref(false)
+const loading = ref(true)
+const dataSourceToast = ref(false)
+const dataSourceInfo = ref({ remoteCount: 0, localCount: 0, totalCategories: 0 })
 const mobileTab = ref<'question' | 'answer'>('question')
 const questionListRef = ref<InstanceType<typeof QuestionList> | null>(null)
 const mobileQuestionListRef = ref<InstanceType<typeof QuestionList> | null>(null)
 
 // Dynamic stats based on version
 const liteCategories = new Set(filteredQuestions.map(q => q.category))
-const heroStats = isFullVersion
+const heroStats = ref(isFullVersion
   ? [
       { value: '435', label: '面试题目' },
       { value: '13大领域', label: '题目分类' },
@@ -311,6 +359,7 @@ const heroStats = isFullVersion
       { value: '3级', label: '难度梯度' },
       { value: '实时', label: '即时作答' },
     ]
+)
 
 const questions = ref<Question[]>(filteredQuestions)
 
@@ -410,11 +459,58 @@ const restoreModifiedQuestions = () => {
       const parsed = JSON.parse(saved) as Question[]
       if (Array.isArray(parsed) && parsed.length > 0) {
         questions.value = parsed
+        return true
       }
     }
   } catch {}
+  return false
 }
-restoreModifiedQuestions()
+
+// Async data loading: prioritize OSS remote data, fallback to local
+onMounted(async () => {
+  // If user has custom modifications, use those directly
+  if (restoreModifiedQuestions()) {
+    loading.value = false
+    return
+  }
+
+  try {
+    const result = await loadQuestions()
+    const loadedQuestions = isFullVersion
+      ? result.questions
+      : result.questions.filter(q => q.id <= LITE_MAX_ID)
+
+    questions.value = loadedQuestions
+    dataSourceInfo.value = {
+      remoteCount: result.remoteCount,
+      localCount: result.localCount,
+      totalCategories: result.totalCategories,
+    }
+
+    // Update heroStats with real count
+    if (!isFullVersion) {
+      const cats = new Set(loadedQuestions.map(q => q.category))
+      heroStats.value[0].value = String(loadedQuestions.length)
+      heroStats.value[1].value = `${cats.size}大领域`
+    } else {
+      heroStats.value[0].value = String(loadedQuestions.length)
+    }
+
+    // Adjust lastIndex if needed
+    if (lastIndex.value >= loadedQuestions.length) {
+      lastIndex.value = Math.max(0, loadedQuestions.length - 1)
+    }
+  } catch (err) {
+    console.error('数据加载失败，使用本地数据', err)
+  } finally {
+    loading.value = false
+    // Show data source toast for 4 seconds
+    dataSourceToast.value = true
+    setTimeout(() => {
+      dataSourceToast.value = false
+    }, 4000)
+  }
+})
 </script>
 
 <style scoped>
