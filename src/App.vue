@@ -28,12 +28,12 @@
           </h1>
 
           <p v-if="isFullVersion" class="text-sm sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light px-2">
-            精心整理的 HTML/CSS + JavaScript + TypeScript + Vue + 浏览器&amp;网络 + 前端工程化 + 性能优化 + 算法&amp;数据结构 + 设计模式 + 项目经验 + 场景题 + 简历深度 核心面试题库，涵盖语义化、盒模型、闭包、原型链、异步编程、ES6+、泛型、响应式原理、HTTP协议、Webpack、Vite、CI/CD、排序算法、观察者模式、工厂模式、代理模式、大文件上传、协同编辑、骨架屏、状态机、性能监控 等多个领域。
+            精心整理的 HTML/CSS + JavaScript + TypeScript + Vue + 浏览器&amp;网络 + 前端工程化 + 性能优化 + 算法实现 + 设计模式 + 项目经验 + 综合场景题 + 简历深度 + AI前端 核心面试题库，涵盖语义化、盒模型、闭包、原型链、异步编程、ES6+、泛型、响应式原理、HTTP协议、Webpack、Vite、CI/CD、排序算法、观察者模式、工厂模式、代理模式、大文件上传、协同编辑、骨架屏、状态机、性能监控、Kuikly跨端、Node Canvas、OAuth2.0、低代码平台、LLM接入、Prompt Engineering、RAG、AI Agent 等多个领域。
             <br class="hidden sm:block" />
             逐题练习、实时作答，助你自信迎接每一场面试。
           </p>
           <p v-else class="text-sm sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light px-2">
-            精心整理的 HTML/CSS + JavaScript + TypeScript + Vue + 浏览器&amp;网络 + 前端工程化 + 性能优化 + 算法&amp;数据结构 核心面试题库，涵盖语义化、盒模型、闭包、原型链、异步编程、ES6+、泛型、响应式原理、HTTP协议、Webpack、Vite、CI/CD、排序算法 等多个领域。
+            精心整理的 HTML/CSS + JavaScript + TypeScript + Vue + 浏览器&amp;网络 + 前端工程化 + 性能优化 + 算法实现 + AI前端 核心面试题库，涵盖语义化、盒模型、闭包、原型链、异步编程、ES6+、泛型、响应式原理、HTTP协议、Webpack、Vite、CI/CD、排序算法、LLM接入、Prompt Engineering 等多个领域。
             <br class="hidden sm:block" />
             逐题练习、实时作答，助你自信迎接每一场面试。
           </p>
@@ -46,6 +46,14 @@
               <svg class="inline-block w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
               </svg>
+            </button>
+            <button 
+              @click="managerVisible = true"
+              class="group relative w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-base sm:text-lg hover:bg-gray-50 dark:hover:bg-white/10 transition-all duration-300 border border-gray-200 dark:border-white/10 hover:border-nuxt-green/30 hover:text-nuxt-green">
+              <svg class="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              题目管理
             </button>
           </div>
 
@@ -223,6 +231,26 @@
       </Transition>
     </div>
 
+    <!-- Floating Manage Button (when in interview mode) -->
+    <button
+      v-if="started"
+      @click="managerVisible = true"
+      class="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-nuxt-green text-nuxt-dark shadow-lg shadow-nuxt-green/30 hover:shadow-nuxt-green/50 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+      title="题目管理"
+    >
+      <svg class="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+    </button>
+
+    <!-- Question Manager Modal -->
+    <QuestionManager
+      :visible="managerVisible"
+      :questions="questions"
+      @close="managerVisible = false"
+      @update:questions="handleUpdateQuestions"
+    />
+
     <!-- Footer (only on landing page) -->
     <footer v-if="!started" class="border-t border-gray-200 dark:border-white/5 py-6 sm:py-8">
       <div class="max-w-7xl mx-auto px-4 text-center">
@@ -241,6 +269,7 @@ import QuestionList from './components/QuestionList.vue'
 import QuestionPanel from './components/QuestionPanel.vue'
 import AnswerPanel from './components/AnswerPanel.vue'
 import ProgressBar from './components/ProgressBar.vue'
+import QuestionManager from './components/QuestionManager.vue'
 import { allQuestions } from './data'
 import type { Question } from './data'
 
@@ -262,6 +291,7 @@ const filteredQuestions = isFullVersion
 
 const started = ref(false)
 const drawerOpen = ref(false)
+const managerVisible = ref(false)
 const mobileTab = ref<'question' | 'answer'>('question')
 const questionListRef = ref<InstanceType<typeof QuestionList> | null>(null)
 const mobileQuestionListRef = ref<InstanceType<typeof QuestionList> | null>(null)
@@ -270,7 +300,7 @@ const mobileQuestionListRef = ref<InstanceType<typeof QuestionList> | null>(null
 const liteCategories = new Set(filteredQuestions.map(q => q.category))
 const heroStats = isFullVersion
   ? [
-      { value: '365', label: '面试题目' },
+      { value: '435', label: '面试题目' },
       { value: '13大领域', label: '题目分类' },
       { value: '3级', label: '难度梯度' },
       { value: '实时', label: '即时作答' },
@@ -358,6 +388,33 @@ const submitAnswer = () => {
     answeredMap.value[currentIndex.value] = currentAnswer.value
   }
 }
+
+// Question Manager: handle updates
+const STORAGE_KEY_MODIFIED = 'interview_modified_questions'
+
+const handleUpdateQuestions = (newQuestions: Question[]) => {
+  questions.value = newQuestions
+  // Persist to localStorage
+  localStorage.setItem(STORAGE_KEY_MODIFIED, JSON.stringify(newQuestions))
+  // Adjust currentIndex if it's now out of range
+  if (currentIndex.value >= newQuestions.length) {
+    currentIndex.value = Math.max(0, newQuestions.length - 1)
+  }
+}
+
+// Restore custom question modifications from localStorage on init
+const restoreModifiedQuestions = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_MODIFIED)
+    if (saved) {
+      const parsed = JSON.parse(saved) as Question[]
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        questions.value = parsed
+      }
+    }
+  } catch {}
+}
+restoreModifiedQuestions()
 </script>
 
 <style scoped>

@@ -32,7 +32,7 @@ export const experienceQuestions: Question[] = [
   {
     id: 902,
     title: '你是如何进行代码 Review 的？',
-    category: '工程实践',
+    category: '项目经验',
     difficulty: 'easy',
     content: `## 你是如何进行代码 Review 的？
 
@@ -63,7 +63,7 @@ export const experienceQuestions: Question[] = [
   {
     id: 903,
     title: '你是如何处理技术债务的？',
-    category: '工程实践',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 你是如何处理技术债务的？
 
@@ -91,7 +91,7 @@ export const experienceQuestions: Question[] = [
   {
     id: 904,
     title: '你是如何学习新技术的？',
-    category: '职业发展',
+    category: '项目经验',
     difficulty: 'easy',
     content: `## 你是如何学习新技术的？
 
@@ -112,7 +112,7 @@ export const experienceQuestions: Question[] = [
   {
     id: 905,
     title: '你是如何保证前端代码质量的？',
-    category: '工程实践',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 你是如何保证前端代码质量的？
 
@@ -143,7 +143,7 @@ export const experienceQuestions: Question[] = [
   {
     id: 906,
     title: '你是如何与后端协作的？',
-    category: '团队协作',
+    category: '项目经验',
     difficulty: 'easy',
     content: `## 你是如何与后端协作的？
 
@@ -239,7 +239,7 @@ reportMetric({ name: 'init_load', value: measure.duration })
   {
     id: 909,
     title: '你是如何处理跨团队协作的？',
-    category: '团队协作',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 你是如何处理跨团队协作的？
 
@@ -266,7 +266,7 @@ reportMetric({ name: 'init_load', value: measure.duration })
   {
     id: 910,
     title: '你对前端未来发展的看法？',
-    category: '职业发展',
+    category: '项目经验',
     difficulty: 'easy',
     content: `## 你对前端未来发展的看法？
 
@@ -287,7 +287,7 @@ reportMetric({ name: 'init_load', value: measure.duration })
   {
     id: 911,
     title: '你是如何做技术选型的？',
-    category: '工程实践',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 你是如何做技术选型的？
 
@@ -314,7 +314,7 @@ reportMetric({ name: 'init_load', value: measure.duration })
   {
     id: 912,
     title: '你是如何做前端安全防护的？',
-    category: '工程实践',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 你是如何做前端安全防护的？
 
@@ -413,7 +413,7 @@ reportMetric({ name: 'init_load', value: measure.duration })
   {
     id: 915,
     title: '你的职业规划是什么？',
-    category: '职业发展',
+    category: '项目经验',
     difficulty: 'easy',
     content: `## 你的职业规划是什么？
 

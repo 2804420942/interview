@@ -26,7 +26,7 @@
         <input
           v-model="searchText"
           type="text"
-          placeholder="搜索题目..."
+          placeholder="搜索标题、答案内容..."
           class="w-full pl-9 pr-3 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg text-sm text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-nuxt-green/30 focus:ring-1 focus:ring-nuxt-green/20 transition-all"
         />
       </div>
@@ -59,7 +59,7 @@
         @wheel.prevent="onCategoryWheel"
       >
         <button
-          @click="activeCategory = 'all'"
+          @click="scrollToTop()"
           class="shrink-0 px-2.5 py-1 text-[11px] rounded-md font-medium transition-all whitespace-nowrap"
           :class="activeCategory === 'all'
             ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
@@ -70,7 +70,7 @@
         <button
           v-for="cat in allCategories"
           :key="cat"
-          @click="activeCategory = cat"
+          @click="scrollToCategory(cat)"
           class="shrink-0 px-2.5 py-1 text-[11px] rounded-md font-medium transition-all whitespace-nowrap"
           :class="activeCategory === cat
             ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
@@ -255,7 +255,8 @@ const filteredQuestions = computed(() => {
     list = list.filter(({ question: q }) =>
       q.title.toLowerCase().includes(keyword) ||
       q.category.toLowerCase().includes(keyword) ||
-      q.tags.some(t => t.toLowerCase().includes(keyword))
+      q.tags.some(t => t.toLowerCase().includes(keyword)) ||
+      q.content.toLowerCase().includes(keyword)
     )
   }
 
@@ -263,10 +264,6 @@ const filteredQuestions = computed(() => {
     list = list.filter(({ globalIndex }) => props.answeredMap[globalIndex])
   } else if (activeFilter.value === 'unanswered') {
     list = list.filter(({ globalIndex }) => !props.answeredMap[globalIndex])
-  }
-
-  if (activeCategory.value !== 'all') {
-    list = list.filter(({ question: q }) => q.category === activeCategory.value)
   }
 
   return list
@@ -368,6 +365,31 @@ const visibleItems = computed(() => {
 const onScroll = () => {
   if (listContainerRef.value) {
     scrollTop.value = listContainerRef.value.scrollTop
+    // Update active category based on scroll position
+    updateActiveCategoryByScroll()
+  }
+}
+
+// Track which category header is currently visible at the top of the list
+const updateActiveCategoryByScroll = () => {
+  const currentScroll = scrollTop.value
+  // Find the last header that is at or above the current scroll position
+  let lastVisibleCategory = 'all'
+  for (let i = 0; i < flatItems.value.length; i++) {
+    const item = flatItems.value[i]
+    if (item.type === 'header' && i < itemPositions.value.length) {
+      if (itemPositions.value[i].top <= currentScroll + 10) {
+        lastVisibleCategory = item.category || 'all'
+      } else {
+        break
+      }
+    }
+  }
+  // Only update if at top, set to 'all'
+  if (currentScroll < 10) {
+    activeCategory.value = 'all'
+  } else {
+    activeCategory.value = lastVisibleCategory
   }
 }
 
@@ -418,6 +440,24 @@ watch(() => props.currentIndex, (newIdx) => {
   nextTick(() => scrollToQuestion(newIdx))
 })
 
+// When search text changes (especially when cleared), scroll to current question
+watch(searchText, () => {
+  nextTick(() => {
+    setTimeout(() => {
+      scrollToQuestion(props.currentIndex)
+    }, 50)
+  })
+})
+
+// When filter tab changes, scroll to current question
+watch(activeFilter, () => {
+  nextTick(() => {
+    setTimeout(() => {
+      scrollToQuestion(props.currentIndex)
+    }, 50)
+  })
+})
+
 const handleSelect = (globalIndex: number) => {
   emit('select', globalIndex)
 }
@@ -443,6 +483,24 @@ const getDifficultyLabel = (diff: string) => {
     case 'medium': return '中等'
     case 'hard': return '困难'
     default: return diff
+  }
+}
+
+const scrollToTop = () => {
+  activeCategory.value = 'all'
+  if (listContainerRef.value) {
+    listContainerRef.value.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+const scrollToCategory = (category: string) => {
+  activeCategory.value = category
+  const headerIdx = flatItems.value.findIndex(
+    item => item.type === 'header' && item.category === category
+  )
+  if (headerIdx >= 0 && headerIdx < itemPositions.value.length && listContainerRef.value) {
+    const targetTop = itemPositions.value[headerIdx].top
+    listContainerRef.value.scrollTo({ top: targetTop, behavior: 'smooth' })
   }
 }
 

@@ -11,6 +11,9 @@ export { designPatternQuestions } from './design-pattern-questions'
 export { experienceQuestions } from './experience-questions'
 export { scenarioQuestions } from './scenario-questions'
 export { resumeDeepQuestions } from './resume-deep-questions'
+export { resumeDeepQuestions2 } from './resume-deep-questions-2'
+export { resumeDeepQuestions3 } from './resume-deep-questions-3'
+export { aiQuestions } from './ai-questions'
 
 import type { Question } from './types'
 import { htmlCssQuestions } from './htmlcss-questions'
@@ -25,6 +28,9 @@ import { designPatternQuestions } from './design-pattern-questions'
 import { experienceQuestions } from './experience-questions'
 import { scenarioQuestions } from './scenario-questions'
 import { resumeDeepQuestions } from './resume-deep-questions'
+import { resumeDeepQuestions2 } from './resume-deep-questions-2'
+import { resumeDeepQuestions3 } from './resume-deep-questions-3'
+import { aiQuestions } from './ai-questions'
 
 /** 所有题目合并 */
 export const allQuestions: Question[] = [
@@ -40,4 +46,7 @@ export const allQuestions: Question[] = [
   ...experienceQuestions,
   ...scenarioQuestions,
   ...resumeDeepQuestions,
+  ...resumeDeepQuestions2,
+  ...resumeDeepQuestions3,
+  ...aiQuestions,
 ]

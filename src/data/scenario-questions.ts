@@ -4,7 +4,7 @@ export const scenarioQuestions: Question[] = [
   {
     id: 1001,
     title: '脚手架工具是如何实现模板下载和缓存的？',
-    category: '脚手架工具',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 脚手架工具是如何实现模板下载和缓存的？
 
@@ -23,7 +23,7 @@ export const scenarioQuestions: Question[] = [
   {
     id: 1002,
     title: '脚手架的 publish 命令是如何检测 Git 冲突的？',
-    category: '脚手架工具',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 脚手架的 publish 命令是如何检测 Git 冲突的？
 
@@ -65,7 +65,7 @@ try {
   {
     id: 1003,
     title: '云构建系统中 WebSocket 通信是如何设计的？',
-    category: '脚手架工具',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 云构建系统中 WebSocket 通信是如何设计的？
 
@@ -108,7 +108,7 @@ function createWebSocket(url) {
   {
     id: 1004,
     title: 'Lerna Monorepo 中如何管理包之间的依赖？',
-    category: '脚手架工具',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## Lerna Monorepo 中如何管理包之间的依赖？
 
@@ -147,7 +147,7 @@ await Promise.all(tasks) // 并行执行，充分利用多核 CPU
   {
     id: 1005,
     title: '脚手架如何实现自动安装依赖和启动项目？',
-    category: '脚手架工具',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 脚手架如何实现自动安装依赖和启动项目？
 
@@ -194,7 +194,7 @@ function detectPackageManager() {
   {
     id: 1006,
     title: '骨架屏是如何实现的？',
-    category: 'QQ运动/Kuikly',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 骨架屏是如何实现的？
 
@@ -226,7 +226,7 @@ function detectPackageManager() {
   {
     id: 1007,
     title: '如何实现活动卡券的占位显示？',
-    category: 'QQ运动/Kuikly',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 如何实现活动卡券的占位显示？
 
@@ -259,7 +259,7 @@ return isLoading ? <CouponSkeleton /> : <CouponCard data={couponData} />
   {
     id: 1008,
     title: '如何实现页面退出时自动暂停动画？',
-    category: 'QQ运动/Kuikly',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 如何实现页面退出时自动暂停动画？
 
@@ -295,7 +295,7 @@ class AnimationManager {
   {
     id: 1009,
     title: '如何建立加载耗时的性能监控？',
-    category: 'QQ运动/Kuikly',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 如何建立加载耗时的性能监控？
 
@@ -338,7 +338,7 @@ monitor.measure('init_load', 'init_start', 'init_end')
   {
     id: 1010,
     title: '如何处理 iOS/Android 平台的动画差异？',
-    category: 'QQ运动/Kuikly',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 如何处理 iOS/Android 平台的动画差异？
 
@@ -375,7 +375,7 @@ if (isLowEndDevice) {
   {
     id: 1011,
     title: 'Canvas 主题预览功能是如何实现的？',
-    category: 'AIGC内容平台',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## Canvas 主题预览功能是如何实现的？
 
@@ -421,7 +421,7 @@ function getContrastColor({ r, g, b }) {
   {
     id: 1012,
     title: '多级审核流程系统是如何设计的？',
-    category: 'AIGC内容平台',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 多级审核流程系统是如何设计的？
 
@@ -450,7 +450,7 @@ function getContrastColor({ r, g, b }) {
   {
     id: 1013,
     title: 'AI 自动生产流程是如何实现的？',
-    category: 'AIGC内容平台',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## AI 自动生产流程是如何实现的？
 
@@ -479,7 +479,7 @@ function getContrastColor({ r, g, b }) {
   {
     id: 1014,
     title: '如何实现素材的三联图合成？',
-    category: 'AIGC内容平台',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 如何实现素材的三联图合成？
 
@@ -518,7 +518,7 @@ async function compositeTripleImage(images) {
   {
     id: 1015,
     title: '如何实现主题上架与天权平台的数据通道？',
-    category: 'AIGC内容平台',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 如何实现主题上架与天权平台的数据通道？
 
@@ -545,7 +545,7 @@ async function compositeTripleImage(images) {
   {
     id: 1016,
     title: '动态主题色替换是如何实现的？',
-    category: '决策引擎/运营平台',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 动态主题色替换是如何实现的？
 
@@ -593,7 +593,7 @@ function generateColorMap(baseColor, newColor) {
   {
     id: 1017,
     title: '菜单模糊搜索是如何实现的？',
-    category: '决策引擎/运营平台',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 菜单模糊搜索是如何实现的？
 
@@ -626,7 +626,7 @@ function searchMenu(query) {
   {
     id: 1018,
     title: 'tagViewList 动态标签页是如何实现的？',
-    category: '决策引擎/运营平台',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## tagViewList 动态标签页是如何实现的？
 
@@ -666,7 +666,7 @@ const useTagViewStore = defineStore('tagView', {
   {
     id: 1019,
     title: '右键菜单（contextMenu）是如何实现的？',
-    category: '决策引擎/运营平台',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 右键菜单（contextMenu）是如何实现的？
 
@@ -708,7 +708,7 @@ function adjustPosition() {
   {
     id: 1020,
     title: '拖拽构建决策表是如何实现的？',
-    category: '决策引擎/运营平台',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 拖拽构建决策表是如何实现的？
 
@@ -743,7 +743,7 @@ function adjustPosition() {
   {
     id: 1021,
     title: '动态路由是如何实现的？',
-    category: '权限系统/路由管理',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 动态路由是如何实现的？
 
@@ -784,7 +784,7 @@ function resetRouter() {
   {
     id: 1022,
     title: '细粒度权限控制（功能权限、数据权限）是如何实现的？',
-    category: '权限系统/路由管理',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 细粒度权限控制是如何实现的？
 
@@ -818,7 +818,7 @@ app.directive('permission', {
   {
     id: 1023,
     title: '首屏加载优化中路由懒加载是如何实现的？',
-    category: '权限系统/路由管理',
+    category: '项目经验',
     difficulty: 'medium',
     content: `## 首屏加载优化中路由懒加载是如何实现的？
 
@@ -855,7 +855,7 @@ router.getRoutes().forEach(route => {
   {
     id: 1024,
     title: '虚拟滚动在万级数据中是如何应用的？',
-    category: '权限系统/路由管理',
+    category: '项目经验',
     difficulty: 'hard',
     content: `## 虚拟滚动在万级数据中是如何应用的？
 

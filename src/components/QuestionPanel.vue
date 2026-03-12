@@ -29,7 +29,7 @@
     </div>
 
     <!-- Question Content (Rendered Markdown) -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar">
+    <div ref="scrollContainer" class="flex-1 overflow-y-auto custom-scrollbar">
       <div class="p-4 sm:p-6">
         <div class="prose-content" v-html="renderedContent"></div>
       </div>
@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { useTheme } from '@/composables/useTheme'
 
 interface Question {
@@ -58,9 +58,31 @@ const props = defineProps<{
 
 const { isDark } = useTheme()
 
+const scrollContainer = ref<HTMLElement | null>(null)
+
+// Watch for question changes and scroll to top
+watch(() => props.question, () => {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = 0
+    }
+  })
+})
+
+const scrollToTop = () => {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTop = 0
+  }
+}
+
+defineExpose({ scrollToTop })
+
 const renderedContent = computed(() => {
   if (!props.question?.content) return ''
-  return simpleMarkdown(props.question.content)
+  let content = props.question.content
+  // Remove the leading title (## ...) since it's already shown in the header
+  content = content.replace(/^\s*##\s+.+\n+/, '')
+  return simpleMarkdown(content)
 })
 
 function simpleMarkdown(md: string): string {
