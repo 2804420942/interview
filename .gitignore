@@ -1,3 +1,4 @@
 node_modules
 website/dist
 .vscode/settings.json
+dist
