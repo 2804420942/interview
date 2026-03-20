@@ -815,4 +815,132 @@ Changesets 是 Monorepo 的版本管理和发布工具：
 - **Changesets**：专注版本管理和发布，更轻量，与 pnpm workspace 配合更好`,
     tags: ['Changesets', 'Monorepo', '版本管理'],
   },
+  {
+    id: 531,
+    title: '脚手架项目的完整流程是怎样的？',
+    category: '架构',
+    difficulty: 'hard',
+    content: `## 脚手架项目的完整流程是怎样的？
+
+**答案：**
+
+脚手架（CLI）是一个命令行工具，帮助开发者快速初始化项目、统一团队规范。完整流程如下：
+
+### 1. 命令注册与解析
+- 使用 \`commander\` 或 \`yargs\` 注册命令和参数
+- 解析用户输入的命令、选项、参数
+
+\`\`\`javascript
+#!/usr/bin/env node
+const { program } = require('commander')
+
+program
+  .command('create <project-name>')
+  .description('创建新项目')
+  .option('-t, --template <template>', '指定模板')
+  .action((name, options) => { /* ... */ })
+\`\`\`
+
+### 2. 交互式询问
+- 使用 \`inquirer\` 或 \`prompts\` 进行交互式问答
+- 收集用户选择的模板、框架、包管理器等信息
+
+### 3. 模板下载
+- 从远程仓库（GitHub / GitLab / npm）或 OSS 下载模板
+- 使用 \`download-git-repo\` 下载 Git 仓库模板
+- 或者从 npm registry 下载模板包
+- 支持模板缓存，避免重复下载
+
+### 4. 模板渲染
+- 使用 \`ejs\` 等模板引擎，将用户输入的变量渲染到模板文件中
+- 处理动态文件名、条件文件生成等
+
+### 5. 依赖安装
+- 使用子进程（\`child_process.spawn\`）调用 npm/yarn/pnpm 安装依赖
+- 支持用户选择包管理器
+
+### 6. Git 初始化
+- \`git init\` 初始化仓库
+- 创建初始 commit
+
+### 7. 完成提示
+- 输出项目创建成功信息
+- 提示后续操作命令（如 \`cd project && npm run dev\`）
+
+**追问：** 脚手架如何实现云构建功能？
+
+**答案：**
+1. 本地脚手架通过 WebSocket 连接到云构建服务
+2. 将项目信息和模板信息发送到云端
+3. 云端拉取模板代码，执行 \`npm install\` 和 \`npm run build\`
+4. 构建产物上传到 OSS / CDN
+5. 通过 WebSocket 实时推送构建日志到本地终端
+6. 构建完成后返回部署地址
+
+**追问：** 脚手架项目中如何用 Lerna 管理多个包？
+
+**答案：**
+采用 Lerna Monorepo 架构，将脚手架拆分为多个包：
+- \`@cli/core\`：核心流程，命令注册和执行
+- \`@cli/init\`：初始化命令
+- \`@cli/publish\`：发布命令
+- \`@cli/utils\`：通用工具函数
+- \`@cli/models\`：数据模型（Package、Command 等）
+
+Lerna 管理版本号统一升级、统一发布到 npm，各包之间通过 \`lerna link\` 建立本地软链接进行开发调试。`,
+    tags: ['脚手架', 'CLI', 'commander', 'Monorepo', '云构建'],
+  },
+  {
+    id: 532,
+    title: 'Monorepo 有什么好处？为什么选 Lerna 而不是 pnpm workspace？',
+    category: '包管理',
+    difficulty: 'hard',
+    content: `## Monorepo 有什么好处？为什么选 Lerna 而不是 pnpm workspace？
+
+**答案：**
+
+### Monorepo 的好处
+
+1. **代码共享**：多个包之间可以直接引用，无需发布到 npm 再安装
+2. **原子提交**：跨多个包的修改可以在一个 commit 中完成，保持一致性
+3. **统一工具链**：ESLint、TypeScript、构建工具等配置可以统一管理
+4. **依赖管理**：统一管理第三方依赖版本，避免版本冲突
+5. **协作效率**：新成员只需克隆一个仓库，即可参与所有包的开发
+6. **重构方便**：跨包重构时 IDE 可以全局搜索替换，不会遗漏
+
+### Lerna 构建的好处
+
+1. **版本管理**：支持 Fixed 模式（统一版本号）和 Independent 模式（独立版本号）
+2. **自动发布**：\`lerna publish\` 自动检测变更包，更新版本号，发布到 npm
+3. **依赖拓扑排序**：\`lerna run build\` 会按依赖关系顺序构建，确保被依赖的包先构建
+4. **CHANGELOG 生成**：自动根据 commit 生成变更日志
+5. **跨包命令执行**：\`lerna exec\` 在所有包中执行命令
+
+### 为什么不用 pnpm workspace？
+
+这取决于项目场景和时间节点：
+
+1. **项目启动时间早**：项目启动时 pnpm workspace 还不够成熟，Lerna 是当时 Monorepo 的主流方案
+2. **版本发布需求强**：Lerna 的版本管理和发布能力（\`lerna version\`、\`lerna publish\`）是原生能力，pnpm workspace 本身不提供版本管理，需要配合 Changesets 等工具
+3. **团队熟悉度**：团队对 Lerna 更熟悉，迁移有学习成本
+4. **npm 发布流程**：Lerna 的 \`lerna publish\` 一条命令完成版本升级 + npm 发布 + Git tag，pnpm 需要额外工具链
+
+**追问：** 如果现在重新选型，你会怎么选？
+
+**答案：**
+现在会优先考虑 **pnpm workspace + Changesets** 的组合：
+1. pnpm 的硬链接机制节省磁盘空间，安装速度更快
+2. pnpm 严格的依赖隔离避免幽灵依赖问题
+3. Changesets 的版本管理流程更现代化，与 CI/CD 集成更好
+4. Lerna 已经被 Nx 团队接管维护，官方推荐配合 Nx 使用，单独使用 Lerna 的场景在减少
+5. Turborepo 也是一个优秀的选择，提供远程缓存和增量构建
+
+但如果项目已经稳定运行在 Lerna 上，没有必要为了迁移而迁移，稳定性优先。
+
+**追问：** pnpm 的幽灵依赖问题具体是什么？
+
+**答案：**
+npm 和 yarn 会将所有依赖扁平化安装到 \`node_modules\` 根目录（hoisting），导致项目中可以 import 没有在 \`package.json\` 中声明的包（它们是其他包的依赖被提升上来的）。一旦某个包不再间接依赖它，代码就会报错。pnpm 通过符号链接 + 内容寻址存储，只允许访问声明的依赖，从根本上解决了这个问题。`,
+    tags: ['Monorepo', 'Lerna', 'pnpm', 'workspace', 'Changesets', '版本管理'],
+  },
 ]

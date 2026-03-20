@@ -481,4 +481,260 @@ export const javascriptQuestions: Question[] = [
     content: '## 什么是 Temporal API？（ES2024 提案）\n\n**答案：**\n`Temporal` 是用于替代 `Date` 对象的新 API，解决 `Date` 的诸多问题：\n\n### Date 的问题：\n\n- 月份从 0 开始（0=1月）\n- 时区处理混乱\n- 可变对象（mutable）\n- 解析行为不一致\n\n### Temporal 的改进：\n\n- 不可变对象\n- 明确的时区支持\n- 月份从 1 开始\n- 支持日历系统（农历等）\n\n```javascript\n// 提案语法（需 polyfill）\nconst now = Temporal.Now.plainDateTimeISO();\nconst date = Temporal.PlainDate.from(\'2024-01-15\');\n```\n\n### 追问：目前处理日期时间推荐用什么库？\n\n- **Day.js**：轻量（2KB），API 类似 Moment.js，不可变，推荐\n- **date-fns**：函数式，Tree Shaking 友好，TypeScript 支持好\n- **Luxon**：Moment.js 作者新作，时区支持好\n- **Moment.js**：老牌但已停止维护，包体积大，不推荐新项目使用',
     tags: ['ES6+', 'Temporal', '日期时间']
   },
+  {
+    id: 61,
+    title: '手写一个 p-limit（并发控制器）',
+    category: 'JS手写',
+    difficulty: 'hard',
+    content: `## 手写一个 p-limit（并发控制器）
+
+**题目描述：**
+实现一个类似 \`p-limit\` 库的并发控制函数，限制同时执行的 Promise 数量。例如 \`pLimit(2)\` 表示最多同时执行 2 个异步任务，其余任务排队等待。
+
+**答案：**
+
+\`\`\`javascript
+function pLimit(concurrency) {
+  // 当前正在执行的任务数
+  let activeCount = 0
+  // 等待队列
+  const queue = []
+
+  const next = () => {
+    activeCount--
+    if (queue.length > 0) {
+      queue.shift()()
+    }
+  }
+
+  const run = async (fn, resolve, reject, ...args) => {
+    activeCount++
+    try {
+      const result = await fn(...args)
+      resolve(result)
+    } catch (err) {
+      reject(err)
+    } finally {
+      next()
+    }
+  }
+
+  const enqueue = (fn, resolve, reject, ...args) => {
+    if (activeCount < concurrency) {
+      run(fn, resolve, reject, ...args)
+    } else {
+      queue.push(() => run(fn, resolve, reject, ...args))
+    }
+  }
+
+  const limit = (fn, ...args) => {
+    return new Promise((resolve, reject) => {
+      enqueue(fn, resolve, reject, ...args)
+    })
+  }
+
+  // 暴露状态，方便调试
+  Object.defineProperties(limit, {
+    activeCount: { get: () => activeCount },
+    pendingCount: { get: () => queue.length }
+  })
+
+  return limit
+}
+\`\`\`
+
+**使用示例：**
+
+\`\`\`javascript
+const limit = pLimit(2) // 最多同时执行 2 个
+
+const fetchUser = (id) => fetch(\\\`/api/user/\\\${id}\\\`).then(r => r.json())
+
+// 虽然发起了 5 个请求，但同时最多执行 2 个
+const results = await Promise.all([
+  limit(fetchUser, 1),
+  limit(fetchUser, 2),
+  limit(fetchUser, 3),
+  limit(fetchUser, 4),
+  limit(fetchUser, 5),
+])
+\`\`\`
+
+**核心原理：**
+1. 维护一个 \`activeCount\` 计数器，记录当前正在执行的任务数
+2. 维护一个 \`queue\` 等待队列，存放超出并发限制的任务
+3. 每次调用 \`limit(fn)\` 时，判断当前活跃数是否小于并发限制：是则立即执行，否则入队
+4. 每个任务完成后（\`finally\`），从队列中取出下一个任务执行
+
+### 追问：如何给 p-limit 增加超时控制？
+
+\`\`\`javascript
+function pLimitWithTimeout(concurrency, timeout = 5000) {
+  const limit = pLimit(concurrency)
+
+  return (fn, ...args) => {
+    return limit(() => {
+      return Promise.race([
+        fn(...args),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Task timeout')), timeout)
+        )
+      ])
+    })
+  }
+}
+\`\`\`
+
+### 追问：p-limit 和信号量（Semaphore）有什么关系？
+
+p-limit 本质上就是一个**信号量**（Semaphore）的 JavaScript 实现。信号量是操作系统中的经典并发控制工具，通过维护一个计数器来控制对共享资源的访问数量。\`concurrency\` 参数就是信号量的初始值，每个任务开始时"获取"信号量（计数器-1），完成时"释放"信号量（计数器+1）。`,
+    tags: ['JS手写', '并发控制', 'Promise', 'p-limit']
+  },
+  {
+    id: 62,
+    title: '手写一个 EventBus（事件总线）',
+    category: 'JS手写',
+    difficulty: 'medium',
+    content: `## 手写一个 EventBus（事件总线）
+
+**题目描述：**
+实现一个 EventBus 类，支持 \`on\`（监听事件）、\`off\`（移除监听）、\`emit\`（触发事件）、\`once\`（只监听一次）。
+
+**答案：**
+
+\`\`\`javascript
+class EventBus {
+  constructor() {
+    // 使用 Map 存储事件名 -> 回调函数集合
+    this.events = new Map()
+  }
+
+  // 监听事件
+  on(event, callback) {
+    if (!this.events.has(event)) {
+      this.events.set(event, [])
+    }
+    this.events.get(event).push(callback)
+    // 返回取消函数，方便使用
+    return () => this.off(event, callback)
+  }
+
+  // 移除监听
+  off(event, callback) {
+    if (!this.events.has(event)) return
+    if (!callback) {
+      // 不传 callback 则移除该事件的所有监听
+      this.events.delete(event)
+      return
+    }
+    const callbacks = this.events.get(event)
+    const index = callbacks.indexOf(callback)
+    if (index > -1) {
+      callbacks.splice(index, 1)
+    }
+    if (callbacks.length === 0) {
+      this.events.delete(event)
+    }
+  }
+
+  // 触发事件
+  emit(event, ...args) {
+    if (!this.events.has(event)) return
+    // 拷贝一份，防止在回调中 off 导致遍历问题
+    const callbacks = [...this.events.get(event)]
+    callbacks.forEach(cb => cb(...args))
+  }
+
+  // 只监听一次
+  once(event, callback) {
+    const wrapper = (...args) => {
+      callback(...args)
+      this.off(event, wrapper)
+    }
+    // 保存原始引用，方便用原始 callback 也能 off
+    wrapper._original = callback
+    this.on(event, wrapper)
+  }
+
+  // 清空所有事件
+  clear() {
+    this.events.clear()
+  }
+}
+\`\`\`
+
+**使用示例：**
+
+\`\`\`javascript
+const bus = new EventBus()
+
+// 监听事件
+const unsubscribe = bus.on('userLogin', (user) => {
+  console.log('用户登录:', user.name)
+})
+
+// 只监听一次
+bus.once('init', () => {
+  console.log('初始化完成，只执行一次')
+})
+
+// 触发事件
+bus.emit('userLogin', { name: '张三' })  // 输出: 用户登录: 张三
+bus.emit('init')  // 输出: 初始化完成，只执行一次
+bus.emit('init')  // 不会输出（已自动移除）
+
+// 取消监听
+unsubscribe()
+bus.emit('userLogin', { name: '李四' })  // 不会输出（已取消）
+\`\`\`
+
+**关键细节：**
+1. \`emit\` 中遍历回调前先拷贝数组，防止在回调中调用 \`off\` 导致索引错乱
+2. \`once\` 通过包装函数实现，执行后自动移除
+3. \`on\` 返回取消函数，是现代事件系统的常见设计（类似 Vue 3 的 watch 返回值）
+
+### 追问：如何实现一个支持命名空间的 EventBus？
+
+\`\`\`javascript
+class NamespacedEventBus extends EventBus {
+  on(event, callback) {
+    return super.on(event, callback)
+  }
+
+  // 支持 'module:event' 格式
+  // off('module:*') 可以移除 module 下所有事件
+  off(event, callback) {
+    if (event.endsWith(':*')) {
+      const namespace = event.slice(0, -2)
+      for (const key of this.events.keys()) {
+        if (key.startsWith(namespace + ':')) {
+          this.events.delete(key)
+        }
+      }
+      return
+    }
+    super.off(event, callback)
+  }
+}
+
+const bus = new NamespacedEventBus()
+bus.on('user:login', () => {})
+bus.on('user:logout', () => {})
+bus.off('user:*') // 移除 user 命名空间下所有事件
+\`\`\`
+
+### 追问：EventBus 在 Vue 3 中为什么被移除了？推荐替代方案是什么？
+
+Vue 2 中常用 \`new Vue()\` 作为 EventBus，Vue 3 移除了 \`$on/$off/$once\`，原因是：
+1. EventBus 导致组件间隐式耦合，数据流难以追踪
+2. 容易忘记 \`off\` 导致内存泄漏
+3. 大型项目中事件满天飞，调试困难
+
+**替代方案：**
+- **Props / Emit**：父子组件通信
+- **Provide / Inject**：跨层级通信
+- **Pinia**：全局状态管理
+- **mitt 库**：如果确实需要 EventBus，用轻量的 \`mitt\`（200B）替代`,
+    tags: ['JS手写', 'EventBus', '发布订阅', '设计模式']
+  },
 ]

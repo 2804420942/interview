@@ -64,6 +64,7 @@
           :class="activeCategory === 'all'
             ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
             : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent'"
+          :data-category="'all'"
         >
           全部分类
         </button>
@@ -75,6 +76,7 @@
           :class="activeCategory === cat
             ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
             : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent'"
+          :data-category="cat"
         >
           {{ cat }}
         </button>
@@ -124,11 +126,27 @@
                   <span class="text-[9px] text-gray-400 dark:text-gray-600 truncate">{{ item.question!.category }}</span>
                 </div>
               </div>
-              <!-- Status Icon -->
-              <div v-if="answeredMap[item.globalIndex!]" class="shrink-0 mt-0.5">
-                <svg class="w-3.5 h-3.5 text-nuxt-green" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
+              <!-- Right Icons: Favorite + Status -->
+              <div class="shrink-0 mt-0.5 flex items-center gap-1">
+                <!-- Favorite Star -->
+                <div
+                  @click.stop="emit('toggle-favorite', item.globalIndex!)"
+                  class="p-0.5 rounded transition-colors cursor-pointer"
+                  :class="favoritesMap[item.globalIndex!]
+                    ? 'text-amber-400 hover:text-amber-500'
+                    : 'text-gray-300 dark:text-gray-600 hover:text-amber-400 dark:hover:text-amber-400 opacity-0 group-hover:opacity-100'"
+                  :title="favoritesMap[item.globalIndex!] ? '取消收藏' : '收藏'"
+                >
+                  <svg class="w-3.5 h-3.5" :fill="favoritesMap[item.globalIndex!] ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                  </svg>
+                </div>
+                <!-- Answered Status -->
+                <div v-if="answeredMap[item.globalIndex!]">
+                  <svg class="w-3.5 h-3.5 text-nuxt-green" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
               </div>
             </button>
           </template>
@@ -170,13 +188,16 @@ const props = withDefaults(defineProps<{
   questions: Question[]
   currentIndex: number
   answeredMap: Record<number, string>
+  favoritesMap?: Record<number, boolean>
   isMobile?: boolean
 }>(), {
-  isMobile: false
+  isMobile: false,
+  favoritesMap: () => ({})
 })
 
 const emit = defineEmits<{
   select: [index: number]
+  'toggle-favorite': [index: number]
 }>()
 
 const ITEM_HEIGHT = 56
@@ -231,6 +252,7 @@ const filterTabs = [
   { label: '全部', value: 'all' },
   { label: '未答', value: 'unanswered' },
   { label: '已答', value: 'answered' },
+  { label: '⭐ 收藏', value: 'favorites' },
 ]
 
 // Get all unique categories in order
@@ -264,6 +286,8 @@ const filteredQuestions = computed(() => {
     list = list.filter(({ globalIndex }) => props.answeredMap[globalIndex])
   } else if (activeFilter.value === 'unanswered') {
     list = list.filter(({ globalIndex }) => !props.answeredMap[globalIndex])
+  } else if (activeFilter.value === 'favorites') {
+    list = list.filter(({ globalIndex }) => props.favoritesMap[globalIndex])
   }
 
   return list
@@ -434,6 +458,36 @@ const scrollToQuestion = (globalIndex: number) => {
       listContainerRef.value.scrollTop = Math.max(0, targetTop - containerHeight.value / 3)
     }
   }
+  // 同步更新分类高亮到当前题目所属分类
+  const question = props.questions[globalIndex]
+  if (question) {
+    activeCategory.value = question.category
+  }
+}
+
+// 监听 activeCategory 变化，自动将分类标签栏横向滚动到对应的按钮位置
+watch(activeCategory, (newCat) => {
+  nextTick(() => {
+    scrollCategoryTabIntoView(newCat)
+  })
+})
+
+// 将分类标签栏中对应的按钮滚动到可见区域
+const scrollCategoryTabIntoView = (category: string) => {
+  if (!categoryScrollRef.value) return
+  const container = categoryScrollRef.value
+  const btn = container.querySelector(`[data-category="${category}"]`) as HTMLElement | null
+  if (!btn) return
+
+  const containerRect = container.getBoundingClientRect()
+  const btnRect = btn.getBoundingClientRect()
+
+  // 如果按钮已经完全在可见区域内，不需要滚动
+  if (btnRect.left >= containerRect.left && btnRect.right <= containerRect.right) return
+
+  // 将按钮滚动到容器的居中位置
+  const scrollLeft = btn.offsetLeft - container.offsetWidth / 2 + btn.offsetWidth / 2
+  container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' })
 }
 
 watch(() => props.currentIndex, (newIdx) => {

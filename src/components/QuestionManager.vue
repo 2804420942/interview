@@ -1,12 +1,14 @@
 <template>
   <Teleport to="body">
     <Transition name="modal-fade">
-      <div v-if="visible" class="fixed inset-0 z-[100] flex items-center justify-center">
+      <div v-if="visible" class="fixed inset-0 z-[200] flex items-center justify-center">
         <!-- Overlay -->
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="handleClose"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="handleClose"></div>
 
         <!-- Modal -->
-        <div class="relative w-[95vw] max-w-6xl h-[90vh] bg-white dark:bg-nuxt-dark-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-white/10">
+        <div class="relative bg-white dark:bg-nuxt-dark-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-white/10
+          w-[100vw] h-[100vh] max-w-[100vw] sm:w-[95vw] sm:max-w-6xl sm:h-[90vh] sm:rounded-2xl rounded-none"
+          @click.stop>
           <!-- Header -->
           <div class="shrink-0 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-gray-50/80 dark:bg-nuxt-dark-100/50">
             <div class="flex items-center gap-3">
@@ -17,7 +19,7 @@
               </div>
               <div>
                 <h2 class="text-lg font-bold text-gray-900 dark:text-white">题目管理</h2>
-                <p class="text-xs text-gray-400 dark:text-gray-500">新增、编辑、删除题目，支持 Markdown 格式</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">新增、编辑、删除题目，支持 Markdown 格式</p>
               </div>
             </div>
             <button @click="handleClose" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
@@ -28,9 +30,39 @@
           </div>
 
           <!-- Content Area -->
-          <div class="flex-1 flex overflow-hidden">
+          <div class="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
+            <!-- Mobile List Toggle Button -->
+            <button
+              v-if="isMobile && !mobileListVisible"
+              @click="mobileListVisible = true"
+              class="shrink-0 flex items-center gap-2 px-4 py-2.5 border-b border-gray-200 dark:border-white/5 bg-gray-50/80 dark:bg-nuxt-dark-100/30 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-nuxt-green transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+              </svg>
+              <span>题目列表</span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded-full">{{ questions.length }}</span>
+              <svg class="w-3.5 h-3.5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+
             <!-- Left: Question List -->
-            <div class="w-80 shrink-0 border-r border-gray-200 dark:border-white/5 flex flex-col bg-gray-50/50 dark:bg-nuxt-dark-100/30">
+            <div
+              v-show="!isMobile || mobileListVisible"
+              class="shrink-0 border-r border-gray-200 dark:border-white/5 flex flex-col bg-gray-50/50 dark:bg-nuxt-dark-100/30 min-h-0"
+              :class="isMobile ? 'w-full flex-1' : 'w-80'"
+            >
+              <!-- Mobile List Header (close button) -->
+              <div class="sm:hidden flex items-center justify-between px-3 py-2.5 border-b border-gray-200 dark:border-white/5 bg-gray-50/80 dark:bg-nuxt-dark-100/50">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">选择题目</span>
+                <button @click="mobileListVisible = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
               <!-- Search & Add -->
               <div class="p-3 border-b border-gray-200 dark:border-white/5 space-y-2">
                 <div class="relative">
@@ -53,14 +85,14 @@
               </div>
 
               <!-- List -->
-              <div class="flex-1 overflow-y-auto custom-scrollbar">
+              <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0" style="-webkit-overflow-scrolling: touch;">
                 <div v-if="filteredListQuestions.length === 0" class="p-6 text-center">
                   <p class="text-sm text-gray-400 dark:text-gray-500">暂无匹配题目</p>
                 </div>
                 <button
                   v-for="(q, idx) in filteredListQuestions"
                   :key="q.id"
-                  @click="selectForEdit(q)"
+                  @click="selectForEditMobile(q)"
                   class="w-full text-left px-3 py-2.5 border-b border-gray-100 dark:border-white/[0.03] transition-all group flex items-start gap-2.5"
                   :class="editingQuestion && editingQuestion.id === q.id
                     ? 'bg-nuxt-green/10'
@@ -100,11 +132,20 @@
             </div>
 
             <!-- Right: Editor -->
-            <div class="flex-1 flex flex-col overflow-hidden">
+            <div
+              v-show="!isMobile || !mobileListVisible"
+              class="flex-1 flex flex-col overflow-hidden min-h-0"
+            >
               <template v-if="editingQuestion">
                 <!-- Editor Toolbar -->
-                <div class="shrink-0 px-5 py-3 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-white dark:bg-nuxt-dark/50">
+                <div class="shrink-0 px-3 sm:px-5 py-2 sm:py-3 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-white dark:bg-nuxt-dark/50">
                   <div class="flex items-center gap-2">
+                    <!-- Mobile: back to list button -->
+                    <button @click="mobileListVisible = true" class="sm:hidden p-1.5 -ml-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                      </svg>
+                    </button>
                     <span class="text-sm font-semibold text-gray-900 dark:text-white">
                       {{ isNewMode ? '新增题目' : '编辑题目' }}
                     </span>
@@ -140,7 +181,7 @@
                 </div>
 
                 <!-- Form Fields -->
-                <div class="shrink-0 px-5 py-4 border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-nuxt-dark-100/20 space-y-3">
+                <div class="shrink-0 px-3 sm:px-5 py-3 sm:py-4 border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-nuxt-dark-100/20 space-y-3">
                   <!-- Title -->
                   <div>
                     <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">题目名称 <span class="text-red-400">*</span></label>
@@ -152,7 +193,7 @@
                     />
                   </div>
 
-                  <div class="grid grid-cols-3 gap-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <!-- Category -->
                     <div>
                       <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">分类 <span class="text-red-400">*</span></label>
@@ -197,10 +238,10 @@
                 </div>
 
                 <!-- Markdown Editor / Preview Toggle -->
-                <div class="shrink-0 px-5 py-2 border-b border-gray-200 dark:border-white/5 flex items-center gap-2 bg-white dark:bg-nuxt-dark/50">
+                <div class="shrink-0 px-3 sm:px-5 py-2 border-b border-gray-200 dark:border-white/5 flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-nuxt-dark/50 overflow-x-auto">
                   <button
                     @click="editorTab = 'edit'"
-                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                    class="px-2 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap"
                     :class="editorTab === 'edit'
                       ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'"
@@ -212,7 +253,7 @@
                   </button>
                   <button
                     @click="editorTab = 'preview'"
-                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                    class="px-2 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap"
                     :class="editorTab === 'preview'
                       ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'"
@@ -225,7 +266,7 @@
                   </button>
                   <button
                     @click="editorTab = 'split'"
-                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+                    class="hidden sm:inline-flex px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap"
                     :class="editorTab === 'split'
                       ? 'bg-nuxt-green/15 text-nuxt-green border border-nuxt-green/20'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'"
@@ -293,8 +334,8 @@
 
         <!-- Delete Confirm Dialog -->
         <Transition name="modal-fade">
-          <div v-if="showDeleteConfirm" class="absolute inset-0 z-[110] flex items-center justify-center">
-            <div class="absolute inset-0 bg-black/30" @click="showDeleteConfirm = false"></div>
+          <div v-if="showDeleteConfirm" class="fixed inset-0 z-[210] flex items-center justify-center">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showDeleteConfirm = false"></div>
             <div class="relative bg-white dark:bg-nuxt-dark-50 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 border border-gray-200 dark:border-white/10">
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
@@ -324,7 +365,7 @@
 
         <!-- Toast Notification -->
         <Transition name="toast-slide">
-          <div v-if="toastMessage" class="absolute top-6 left-1/2 -translate-x-1/2 z-[120] px-5 py-3 rounded-xl text-sm font-medium shadow-xl border"
+          <div v-if="toastMessage" class="fixed top-6 left-1/2 -translate-x-1/2 z-[220] px-5 py-3 rounded-xl text-sm font-medium shadow-xl border"
             :class="toastType === 'success'
               ? 'bg-nuxt-green/10 text-nuxt-green border-nuxt-green/20 backdrop-blur-xl'
               : 'bg-red-50 dark:bg-red-500/10 text-red-500 border-red-200 dark:border-red-500/20 backdrop-blur-xl'">
@@ -340,7 +381,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 interface Question {
   id: number
@@ -356,6 +397,7 @@ const STORAGE_KEY_CUSTOM = 'interview_custom_questions'
 const props = defineProps<{
   visible: boolean
   questions: Question[]
+  currentQuestionIndex?: number
 }>()
 
 const emit = defineEmits<{
@@ -370,6 +412,8 @@ const editorTab = ref<'edit' | 'preview' | 'split'>('split')
 const showDeleteConfirm = ref(false)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
+const mobileListVisible = ref(false)
+const isMobile = ref(window.innerWidth < 640)
 
 const editForm = ref({
   title: '',
@@ -440,6 +484,15 @@ const selectForEdit = (q: Question) => {
   }
 }
 
+// Mobile: select and close list
+const selectForEditMobile = (q: Question) => {
+  selectForEdit(q)
+  // 移动端选中后自动关闭列表面板
+  if (isMobile.value) {
+    mobileListVisible.value = false
+  }
+}
+
 // Create new question
 const addNewQuestion = () => {
   isNewMode.value = true
@@ -461,6 +514,10 @@ const addNewQuestion = () => {
     content: '',
   }
   editorTab.value = 'edit'
+  // 移动端新增时关闭列表面板
+  if (isMobile.value) {
+    mobileListVisible.value = false
+  }
 }
 
 // Save question (add or update)
@@ -492,6 +549,11 @@ const saveQuestion = () => {
     const idx = newList.findIndex(q => q.id === updatedQ.id)
     if (idx >= 0) {
       newList[idx] = updatedQ
+      // Track that this existing question has been modified
+      if (!customIds.value.has(updatedQ.id)) {
+        modifiedIds.value.add(updatedQ.id)
+        saveModifiedIds()
+      }
       showToast('题目保存成功！', 'success')
     }
   }
@@ -514,6 +576,8 @@ const doDelete = () => {
   const newList = props.questions.filter(q => q.id !== deleteId)
   customIds.value.delete(deleteId)
   saveCustomIds()
+  modifiedIds.value.delete(deleteId)
+  saveModifiedIds()
   emit('update:questions', newList)
   editingQuestion.value = null
   isNewMode.value = false
@@ -535,17 +599,29 @@ const showToast = (msg: string, type: 'success' | 'error') => {
 
 // Save custom modifications to localStorage
 const STORAGE_KEY_MODIFIED = 'interview_modified_questions'
+// Track IDs of questions that have been modified (not custom-added, but edited from originals)
+const modifiedIds = ref<Set<number>>((() => {
+  try {
+    const saved = localStorage.getItem('interview_modified_ids')
+    if (saved) return new Set(JSON.parse(saved) as number[])
+  } catch {}
+  return new Set<number>()
+})())
+
+const saveModifiedIds = () => {
+  localStorage.setItem('interview_modified_ids', JSON.stringify([...modifiedIds.value]))
+}
 
 const saveCustomQuestions = (list: Question[]) => {
-  // Save all questions that are custom or modified
-  const customList = list.filter(q => customIds.value.has(q.id))
-  // Also save any modifications to existing questions
-  localStorage.setItem(STORAGE_KEY_MODIFIED, JSON.stringify(list))
+  // Only save questions that are custom (newly added) or have been modified by the user
+  const modifiedOrCustom = list.filter(q => customIds.value.has(q.id) || modifiedIds.value.has(q.id))
+  localStorage.setItem(STORAGE_KEY_MODIFIED, JSON.stringify(modifiedOrCustom))
 }
 
 const handleClose = () => {
   editingQuestion.value = null
   isNewMode.value = false
+  mobileListVisible.value = false
   emit('close')
 }
 
@@ -555,6 +631,35 @@ watch(() => props.visible, (val) => {
     editingQuestion.value = null
     isNewMode.value = false
     listSearch.value = ''
+    // 移动端打开时默认显示题目列表
+    isMobile.value = window.innerWidth < 640
+    mobileListVisible.value = isMobile.value
+    // 移动端默认编辑模式，桌面端默认分栏模式
+    editorTab.value = isMobile.value ? 'edit' : 'split'
+    // Auto-select current question if provided
+    if (props.currentQuestionIndex !== undefined && props.currentQuestionIndex >= 0 && props.currentQuestionIndex < props.questions.length) {
+      selectForEdit(props.questions[props.currentQuestionIndex])
+      // 如果有当前题目，移动端直接进入编辑状态而不是显示列表
+      if (isMobile.value) {
+        mobileListVisible.value = false
+      }
+    }
+  }
+})
+
+// 监听窗口尺寸变化
+let resizeHandler: (() => void) | null = null
+
+onMounted(() => {
+  resizeHandler = () => {
+    isMobile.value = window.innerWidth < 640
+  }
+  window.addEventListener('resize', resizeHandler)
+})
+
+onUnmounted(() => {
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
   }
 })
 

@@ -669,4 +669,188 @@ document.addEventListener('visibilitychange', () => {
 5. 展示原始文件名、行号、代码片段`,
     tags: ['前端监控', 'Sentry', 'source map', '错误上报']
   },
+  {
+    id: 621,
+    title: '虚拟滚动的原理是什么？如何实现？',
+    category: '渲染性能',
+    difficulty: 'hard',
+    content: `## 虚拟滚动的原理是什么？如何实现？
+
+**答案：**
+
+虚拟滚动（Virtual Scrolling）是一种只渲染可视区域内的列表项，而非渲染全部数据的优化技术。当列表包含成千上万条数据时，全部渲染会导致 DOM 节点过多、内存占用高、渲染卡顿，虚拟滚动可以将渲染节点数量控制在可视区域大小范围内。
+
+### 核心原理
+
+1. **容器结构**：外层容器固定高度并设置 \`overflow: auto\`，内部用一个"占位元素"撑起完整列表的总高度，使滚动条行为与真实列表一致
+2. **计算可视区域**：根据 \`scrollTop\` 和每项的高度，计算当前可视区域内应该展示的起始索引（startIndex）和结束索引（endIndex）
+3. **只渲染可见项**：仅渲染 startIndex 到 endIndex 之间的列表项，并通过 \`transform: translateY()\` 或 \`paddingTop\` 将这些项偏移到正确的位置
+4. **滚动时动态更新**：监听 scroll 事件，滚动时重新计算可见范围，替换渲染的列表项
+
+### 定高虚拟滚动实现
+
+\`\`\`javascript
+// 核心计算逻辑
+const containerHeight = 500   // 可视区域高度
+const itemHeight = 50         // 每项固定高度
+const totalHeight = data.length * itemHeight  // 总高度（撑起滚动条）
+const visibleCount = Math.ceil(containerHeight / itemHeight) // 可见数量
+const bufferCount = 5         // 上下缓冲区，防止滚动白屏
+
+function onScroll(scrollTop) {
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - bufferCount)
+  const endIndex = Math.min(data.length, startIndex + visibleCount + 2 * bufferCount)
+  const offsetY = startIndex * itemHeight  // 列表偏移量
+  // 只渲染 data.slice(startIndex, endIndex)
+  // 设置 transform: translateY(offsetY)
+}
+\`\`\`
+
+### 不定高虚拟滚动
+
+当列表项高度不固定时，实现更复杂：
+
+1. **预估高度**：先给每项一个预估高度，渲染后通过 \`ResizeObserver\` 或 \`getBoundingClientRect\` 获取实际高度并缓存
+2. **位置缓存**：维护一个数组记录每项的 top 和 bottom 位置
+3. **二分查找**：根据 scrollTop 用二分查找快速定位 startIndex
+4. **动态更新**：实际高度与预估高度不同时，更新位置缓存并调整占位元素总高度
+
+\`\`\`javascript
+// 二分查找 startIndex
+function findStartIndex(scrollTop, positions) {
+  let low = 0, high = positions.length - 1
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2)
+    if (positions[mid].bottom <= scrollTop) {
+      low = mid + 1
+    } else if (positions[mid].top > scrollTop) {
+      high = mid - 1
+    } else {
+      return mid  // scrollTop 在该项的 top 和 bottom 之间
+    }
+  }
+  return low
+}
+\`\`\`
+
+### 追问：虚拟滚动有哪些常见问题和优化手段？
+
+**答案：**
+1. **快速滚动白屏**：增加上下缓冲区（buffer），提前渲染可视区域外的几项
+2. **滚动抖动**：不定高场景下，实际高度和预估高度差异导致跳动，需要在渲染后及时修正位置缓存
+3. **搜索/锚点定位**：需要提供 \`scrollToIndex\` 方法，根据位置缓存计算目标 scrollTop
+4. **键盘导航和无障碍**：需要正确设置 \`aria-rowcount\`、\`aria-rowindex\` 等属性
+5. **常用库**：Vue 中可用 \`vue-virtual-scroller\`，React 中可用 \`react-window\` 或 \`react-virtuoso\`
+
+### 追问：虚拟滚动和懒加载/分页加载有什么区别？
+
+**答案：**
+- **虚拟滚动**：数据全部在内存中，只是 DOM 渲染做了优化，适合数据量大但已全部加载的场景
+- **懒加载/无限滚动**：数据按需从后端分批加载，适合数据量极大无法一次性获取的场景
+- 两者可以结合使用：先懒加载获取数据，再虚拟滚动优化渲染`,
+    tags: ['虚拟滚动', 'Virtual Scrolling', '长列表优化', 'DOM性能']
+  },
+  {
+    id: 622,
+    title: '如何做构建产物的减包优化？如何量化优化效果？',
+    category: '加载性能',
+    difficulty: 'hard',
+    content: `## 如何做构建产物的减包优化？如何量化优化效果？
+
+**答案：**
+
+减包优化的目标是减小构建产物体积，从而缩短资源下载时间、提升首屏加载速度。以下是系统化的减包方法和量化手段。
+
+### 一、分析阶段：找到优化目标
+
+优化前必须先分析，知道"大"在哪里：
+
+1. **webpack-bundle-analyzer**：可视化分析各模块体积占比
+2. **source-map-explorer**：基于 source map 分析代码体积
+3. **vite-plugin-visualizer**：Vite 项目的产物分析插件
+4. **构建日志**：记录每次构建的产物大小、各 chunk 体积
+
+\`\`\`bash
+# Webpack 分析
+npx webpack-bundle-analyzer dist/stats.json
+
+# Vite 项目
+npm install rollup-plugin-visualizer -D
+\`\`\`
+
+### 二、减包手段
+
+**1. 依赖优化（效果最显著）**
+- 替换重型依赖：\`moment.js\`（300KB）→ \`dayjs\`（2KB）、\`lodash\`（70KB）→ \`lodash-es\` 按需引入
+- 移除未使用的依赖：定期清理 package.json 中未使用的包
+- CDN 外置大依赖：将 Vue、React、ECharts 等通过 CDN 引入，不打包进 bundle
+
+**2. 代码分割（Code Splitting）**
+- 路由懒加载：\`() => import('./views/Home.vue')\`
+- 按需加载组件：大型组件（如 ECharts 图表）使用动态 import
+- 合理配置 splitChunks：提取公共依赖
+
+**3. Tree Shaking**
+- 确保使用 ESM 格式的依赖
+- 配置 \`sideEffects: false\`
+- 避免导入整个库：\`import { debounce } from 'lodash-es'\` 而非 \`import _ from 'lodash'\`
+
+**4. 资源压缩**
+- JS 压缩：Terser（移除注释、死代码、缩短变量名）
+- CSS 压缩：cssnano
+- 图片压缩：使用 WebP 格式，合理设置压缩率
+- Gzip/Brotli：服务端开启压缩，通常可再减少 60-70%
+
+**5. 其他手段**
+- 移除 console.log：生产环境通过 Terser 配置移除
+- 按需引入 UI 组件库：Element Plus 使用 \`unplugin-vue-components\` 自动按需导入
+- 图标按需引入：使用 \`unplugin-icons\` 按需加载图标
+
+### 三、量化优化效果
+
+**如何知道减少了 60% 的时间？**
+
+1. **构建产物体积对比**
+\`\`\`bash
+# 优化前记录
+du -sh dist/   # 总体积
+ls -la dist/assets/*.js  # 各 JS chunk 体积
+
+# 优化后同样记录，计算体积减少比例
+# 例如：优化前总JS 1.2MB → 优化后 480KB，减少 60%
+\`\`\`
+
+2. **Lighthouse 性能评分对比**
+\`\`\`
+优化前：LCP 4.2s，Performance Score 52
+优化后：LCP 1.6s，Performance Score 88
+加载时间减少：(4.2 - 1.6) / 4.2 ≈ 62%
+\`\`\`
+
+3. **真实用户数据（RUM）对比**
+- 通过性能监控平台（如 Sentry Performance、自研监控）对比优化前后的指标
+- 取同一时段、同类用户群的 P50/P75/P95 数据对比
+- 观察 1-2 周数据趋势，排除偶然波动
+
+4. **CI 集成体积卡点**
+\`\`\`javascript
+// bundlesize 配置
+{
+  "files": [
+    { "path": "dist/assets/*.js", "maxSize": "200 kB" },
+    { "path": "dist/assets/*.css", "maxSize": "50 kB" }
+  ]
+}
+\`\`\`
+
+### 追问：如何持续防止产物体积膨胀？
+
+**答案：**
+1. **CI 卡点**：在 CI 流水线中集成 bundlesize 检查，产物超限则构建失败
+2. **体积预算**：设置各模块的体积上限，新增依赖需评估影响
+3. **定期审计**：每月用 \`npm-check\` 或 \`depcheck\` 清理未使用的依赖
+4. **Code Review**：关注新引入的大依赖，评估是否有轻量替代方案
+5. **可视化看板**：将产物体积趋势展示在团队看板上，让每次变化可追溯`,
+    tags: ['减包优化', 'Bundle分析', 'Tree Shaking', '性能量化', 'Lighthouse']
+  },
 ]
