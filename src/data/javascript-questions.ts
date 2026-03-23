@@ -94,7 +94,7 @@ export const javascriptQuestions: Question[] = [
     title: 'ES6 有哪些重要新特性？',
     category: 'ES6+',
     difficulty: 'easy',
-    content: '## ES6 有哪些重要新特性？\n\n**答案：**\n\n- **let/const**：块级作用域，const 声明常量\n- **箭头函数**：简洁语法，继承外层 this\n- **模板字符串**：反引号，支持插值和多行\n- **解构赋值**：数组和对象解构\n- **展开运算符/rest 参数**：`...`\n- **默认参数**：函数参数默认值\n- **Promise**：异步编程\n- **class**：类语法糖\n- **模块化**：`import/export`\n- **Symbol**：唯一值类型\n- **Map/Set/WeakMap/WeakSet**：新数据结构\n- **Proxy/Reflect**：元编程\n- **Generator/Iterator**：迭代器协议\n- **for...of**：可迭代对象遍历\n\n### 追问：let、const、var 的区别？\n\n| | var | let | const |\n|--|-----|-----|-------|\n| 作用域 | 函数/全局 | 块级 | 块级 |\n| 变量提升 | 提升并初始化为 undefined | 提升但不初始化（TDZ） | 提升但不初始化（TDZ） |\n| 重复声明 | 可以 | 不可以 | 不可以 |\n| 重新赋值 | 可以 | 可以 | 不可以（引用不可变，值可变） |\n| 全局属性 | 挂到 window | 不挂 | 不挂 |',
+    content: '## ES6 有哪些重要新特性？\n\n**答案：**\n\n- **let/const**：块级作用域，const 声明常量\n- **箭头函数**：简洁语法，继承外层 this\n- **模板字符串**：反引号，支持插值和多行\n- **解构赋值**：数组和对象解构\n- **展开运算符/rest 参数**：`...`\n- **默认参数**：函数参数默认值\n- **Promise**：异步编程\n- **class**：类语法糖\n- **模块化**：`import/export`\n- **Symbol**：唯一值类型\n- **Map/Set/WeakMap/WeakSet**：新数据结构\n- **Proxy/Reflect**：元编程\n- **Generator/Iterator**：迭代器协议\n- **for...of**：可迭代对象遍历\n\n### 追问：let、const、var 的区别？\n\n| 变量声明| var | let | const |\n|--|-----|-----|-------|\n| 作用域 | 函数/全局 | 块级 | 块级 |\n| 变量提升 | 提升并初始化为 undefined | 提升但不初始化（TDZ） | 提升但不初始化（TDZ） |\n| 重复声明 | 可以 | 不可以 | 不可以 |\n| 重新赋值 | 可以 | 可以 | 不可以（引用不可变，值可变） |\n| 全局属性 | 挂到 window | 不挂 | 不挂 |',
     tags: ['ES6+', 'let/const', '新特性']
   },
   {
@@ -406,7 +406,7 @@ export const javascriptQuestions: Question[] = [
     title: 'localStorage、sessionStorage、Cookie 的区别？',
     category: 'Web API',
     difficulty: 'easy',
-    content: '## localStorage、sessionStorage、Cookie 的区别？\n\n| | localStorage | sessionStorage | Cookie |\n|--|-------------|----------------|--------|\n| 大小 | ~5MB | ~5MB | ~4KB |\n| 生命周期 | 永久（手动清除） | 标签页关闭清除 | 可设置过期时间 |\n| 作用域 | 同源共享 | 同标签页 | 同源（可设置域） |\n| 随请求发送 | 不发送 | 不发送 | 自动携带 |\n| JS 访问 | 可以 | 可以 | 可以（非 HttpOnly） |\n\n### 追问：Cookie 的 HttpOnly、Secure、SameSite 属性有什么作用？\n\n- `HttpOnly`：JS 无法通过 `document.cookie` 访问，防止 XSS 攻击窃取 Cookie\n- `Secure`：只在 HTTPS 连接中发送，防止中间人攻击\n- `SameSite`：控制跨站请求是否携带 Cookie，防止 CSRF 攻击\n  - `Strict`：完全禁止跨站携带\n  - `Lax`：允许导航跳转携带，禁止 AJAX 跨站携带（默认值）\n  - `None`：允许跨站携带（需配合 Secure）',
+    content: '## localStorage、sessionStorage、Cookie 的区别？\n\n|浏览器存储 | localStorage | sessionStorage | Cookie |\n|--|-------------|----------------|--------|\n| 大小 | ~5MB | ~5MB | ~4KB |\n| 生命周期 | 永久（手动清除） | 标签页关闭清除 | 可设置过期时间 |\n| 作用域 | 同源共享 | 同标签页 | 同源（可设置域） |\n| 随请求发送 | 不发送 | 不发送 | 自动携带 |\n| JS 访问 | 可以 | 可以 | 可以（非 HttpOnly） |\n\n### 追问：Cookie 的 HttpOnly、Secure、SameSite 属性有什么作用？\n\n- `HttpOnly`：JS 无法通过 `document.cookie` 访问，防止 XSS 攻击窃取 Cookie\n- `Secure`：只在 HTTPS 连接中发送，防止中间人攻击\n- `SameSite`：控制跨站请求是否携带 Cookie，防止 CSRF 攻击\n  - `Strict`：完全禁止跨站携带\n  - `Lax`：允许导航跳转携带，禁止 AJAX 跨站携带（默认值）\n  - `None`：允许跨站携带（需配合 Secure）',
     tags: ['Web API', 'Storage', 'Cookie']
   },
   {
