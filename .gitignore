@@ -1,0 +1,6 @@
+node_modules
+*.pyc
+.meta.json
+.version.txt
+.git_logck
+.with
