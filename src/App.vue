@@ -129,10 +129,10 @@
           >
             精心整理的 HTML/CSS + JavaScript + TypeScript + Vue +
             浏览器&amp;网络 + 前端工程化 + 性能优化 + 算法实现 + 设计模式 +
-            项目经验 + 综合场景题 + 简历深度 + AI前端
+            项目经验 + 综合场景题 + 简历深度 + AI前端 + Agent应用
             核心面试题库，涵盖语义化、盒模型、闭包、原型链、异步编程、ES6+、泛型、响应式原理、HTTP协议、Webpack、Vite、CI/CD、排序算法、观察者模式、工厂模式、代理模式、大文件上传、协同编辑、骨架屏、状态机、性能监控、Kuikly跨端、Node
             Canvas、OAuth2.0、低代码平台、LLM接入、Prompt Engineering、RAG、AI
-            Agent 等多个领域。
+            Agent、LangChain、LangGraph、MCP、多 Agent 协作 等多个领域。
             <br class="hidden sm:block" />
             逐题练习、实时作答，助你自信迎接每一场面试。
           </p>

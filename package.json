@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "fix:escapes": "node scripts/fix-escaped-backticks.cjs src/data --write",
     "check:fences": "node scripts/check-code-fences.cjs",
-    "test:render": "node scripts/test-renderer.cjs"
+    "test:render": "node scripts/test-renderer.cjs",
+    "check:cloudbase": "node scripts/cloudbase-ai-probe.cjs"
   },
   "dependencies": {
     "dagre": "^0.8.5",
